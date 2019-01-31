@@ -142,6 +142,52 @@ class KnowledgeBase(object):
         """
         ####################################################
         # Student code goes here
+        res = self.kb_explain_helper(fact_or_rule, "")
+        # print(res)
+        return res
+
+    def kb_explain_helper(self, fact_or_rule, indent):
+        res = ""
+        res += indent
+        if isinstance(fact_or_rule, Fact):
+            if fact_or_rule in self.facts:
+                fact_or_rule = self._get_fact(fact_or_rule)
+                res += "fact: " + str(fact_or_rule.statement)
+                if fact_or_rule.asserted:
+                    res += " ASSERTED"
+                res += "\n"
+                for pair in fact_or_rule.supported_by:
+                    res += indent + "  SUPPORTED BY\n"
+                    for p in pair:
+                        temp = self.kb_explain_helper(p, indent + "    ")
+                        if temp:
+                            res += temp
+            else:
+                res = "Fact is not in the KB"
+            return res
+        elif isinstance(fact_or_rule, Rule):
+            if fact_or_rule in self.rules:
+                fact_or_rule = self._get_rule(fact_or_rule)
+                res += "rule: ("
+                for l in fact_or_rule.lhs:
+                    res += str(l) +", "
+                res = res[:-2]
+                res += ") -> "
+                res += str(fact_or_rule.rhs)
+                if fact_or_rule.asserted:
+                    res += " ASSERTED"
+                res += "\n"
+                for pair in fact_or_rule.supported_by:
+                    res += indent + "  SUPPORTED BY\n"
+                    for p in pair:
+                        temp = self.kb_explain_helper(p, indent + "    ")
+                        if temp:
+                            res += temp
+            else:
+                res = "Rule is not in the KB"
+            return res
+        else:
+            return False
 
 
 class InferenceEngine(object):
@@ -154,7 +200,7 @@ class InferenceEngine(object):
             kb (KnowledgeBase) - A KnowledgeBase
 
         Returns:
-            Nothing            
+            Nothing
         """
         printv('Attempting to infer from {!r} and {!r} => {!r}', 1, verbose,
             [fact.statement, rule.lhs, rule.rhs])
